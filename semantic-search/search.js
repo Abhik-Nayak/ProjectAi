@@ -57,4 +57,4 @@ async function semanticSearch(query) {
   process.exit();
 }
 
-semanticSearch("How does authentication using token work?");
+semanticSearch("How does nodejs secure api?");

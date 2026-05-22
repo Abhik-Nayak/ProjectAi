@@ -28,9 +28,10 @@ async function insertDocuments() {
     const embedding = await generateEmbedding(doc);
     console.log("doc:",doc,"Embedding:", embedding);
     await pool.query(
-      "INSERT INTO documents (content, embedding) VALUES ($1, $2)",
+      "INSERT INTO documents (content, embedding) VALUES ($1, $2::vector)",
       [doc, JSON.stringify(embedding)]
     );
+    
 
     console.log("Inserted:", doc);
   }

@@ -1,0 +1,45 @@
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.heading {
+  font-size: 1.125rem;
+  margin-bottom: 1rem;
+}
+
+.dropzone {
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.dropzone:hover {
+  border-color: var(--accent);
+}
+
+.hint {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 0.5rem;
+}
+
+.info {
+  margin-top: 0.75rem;
+  color: var(--accent);
+}
+
+.success {
+  margin-top: 0.75rem;
+  color: var(--success);
+}
+
+.error {
+  margin-top: 0.75rem;
+  color: var(--error);
+}
