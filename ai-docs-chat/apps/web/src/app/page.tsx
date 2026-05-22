@@ -1,5 +1,6 @@
 import { FileUpload } from '@/components/file-upload';
 import { DocumentList } from '@/components/document-list';
+import { SearchPanel } from '@/components/search-panel';
 import styles from './page.module.css';
 
 export default function Home() {
@@ -10,6 +11,9 @@ export default function Home() {
       <div className={styles.grid}>
         <FileUpload />
         <DocumentList />
+      </div>
+      <div className={styles.searchSection}>
+        <SearchPanel />
       </div>
     </main>
   );

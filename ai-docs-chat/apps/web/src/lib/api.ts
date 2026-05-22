@@ -26,3 +26,18 @@ export async function fetchDocuments() {
 
   return res.json();
 }
+
+export async function searchDocuments(query: string, topK = 5) {
+  const res = await fetch(`${API_BASE}/api/search`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query, topK }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: res.statusText }));
+    throw new Error(err.message ?? 'Search failed');
+  }
+
+  return res.json();
+}
