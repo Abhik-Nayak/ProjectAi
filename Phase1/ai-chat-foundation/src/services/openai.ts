@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import type { Message } from "../types/index.js";
+import type { Message, TokenUsage } from "../types/index.js";
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -8,7 +8,19 @@ const SYSTEM_PROMPT: Message = {
   content: "You are a helpful AI assistant.",
 };
 
-export async function getChatCompletion(messages: Message[]): Promise<string> {
+// GPT-4o-mini pricing (per 1M tokens) — update if you switch models
+const PRICING = {
+  input: 0.15, // $0.15 per 1M input tokens
+  output: 0.6, // $0.60 per 1M output tokens
+};
+
+function calculateCost(promptTokens: number, completionTokens: number): number {
+  const inputCost = (promptTokens / 1_000_000) * PRICING.input;
+  const outputCost = (completionTokens / 1_000_000) * PRICING.output;
+  return Math.round((inputCost + outputCost) * 1_000_000) / 1_000_000;
+}
+
+export async function getChatCompletion(messages: Message[]): Promise<{ content: string; usage: TokenUsage; }> {
   const response = await client.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [SYSTEM_PROMPT, ...messages],
@@ -16,7 +28,28 @@ export async function getChatCompletion(messages: Message[]): Promise<string> {
     max_tokens: 1024,
   });
 
-  return response.choices[0]?.message?.content ?? "";
+  // return response.choices[0]?.message?.content ?? "";
+
+  const usage = response.usage;
+  const tokenUsage: TokenUsage = {
+    promptTokens: usage?.prompt_tokens ?? 0,
+    completionTokens: usage?.completion_tokens ?? 0,
+    totalTokens: usage?.total_tokens ?? 0,
+    costUSD: calculateCost(
+      usage?.prompt_tokens ?? 0,
+      usage?.completion_tokens ?? 0,
+    ),
+  };
+
+  console.log("[Token Usage]", {
+    model: "gpt-4o-mini",
+    ...tokenUsage,
+  });
+
+  return {
+    content: response.choices[0]?.message?.content ?? "",
+    usage: tokenUsage,
+  };
 }
 
 // streaming support code.

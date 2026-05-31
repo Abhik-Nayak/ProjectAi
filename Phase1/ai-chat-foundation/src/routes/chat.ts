@@ -79,7 +79,7 @@ router.post("/", async (req: Request, res: Response) => {
     const history = getMessages(convId);
     const reply = await getChatCompletion(history);
 
-    addMessage(convId, { role: "assistant", content: reply });
+    addMessage(convId, { role: "assistant", content: reply.content });
 
     res.json({ conversationId: convId, reply });
   } catch (error) {

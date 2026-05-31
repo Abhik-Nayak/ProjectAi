@@ -19,3 +19,9 @@ export interface ChatResponse {
   conversationId: string;
   reply: string;
 }
+export interface TokenUsage {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  costUSD: number;
+}
