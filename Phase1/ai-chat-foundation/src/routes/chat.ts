@@ -7,10 +7,59 @@ import {
   listConversations,
   deleteConversation,
 } from "../memory/memoryStore.js";
-import { getChatCompletion } from "../services/openai.js";
+import { getChatCompletion, streamChatCompletion } from "../services/openai.js";
 import type { ChatRequest } from "../types/index.js";
 
 const router = Router();
+
+router.post("/stream", async (req: Request, res: Response) => {
+  try {
+    const { conversationId, message } = req.body as ChatRequest;
+
+    let convId = conversationId;
+    if (!convId) {
+      const conv = createConversation();
+      convId = conv.id;
+    } else if (!getConversation(convId)) {
+      res.status(404).json({ error: "Conversation not found" });
+      return;
+    }
+
+    addMessage(convId, { role: "user", content: message });
+
+    // SSE headers
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+
+    // Send conversation ID as the first event
+    res.write(`data: ${JSON.stringify({ conversationId: convId })}\n\n`);
+
+    const history = getMessages(convId);
+
+    const fullReply = await streamChatCompletion(
+      history,
+      (token) => {
+        res.write(`data: ${JSON.stringify({ token })}\n\n`);
+      },
+      () => {
+        res.write(`data: [DONE]\n\n`);
+        res.end();
+      }
+    );
+
+    addMessage(convId, { role: "assistant", content: fullReply });
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : "Unknown error";
+    if (!res.headersSent) {
+      res.status(500).json({ error: msg });
+    } else {
+      res.write(`data: ${JSON.stringify({ error: msg })}\n\n`);
+      res.end();
+    }
+  }
+});
+
 
 router.post("/", async (req: Request, res: Response) => {
   try {
@@ -44,7 +93,7 @@ router.get("/conversations", (_req: Request, res: Response) => {
 });
 
 router.get("/conversations/:id", (req: Request, res: Response) => {
-  const conversation = getConversation(req.params.id);
+  const conversation = getConversation(req.params.id as string);
   if (!conversation) {
     res.status(404).json({ error: "Conversation not found" });
     return;
@@ -53,7 +102,7 @@ router.get("/conversations/:id", (req: Request, res: Response) => {
 });
 
 router.delete("/conversations/:id", (req: Request, res: Response) => {
-  const deleted = deleteConversation(req.params.id);
+  const deleted = deleteConversation(req.params.id as string);
   if (!deleted) {
     res.status(404).json({ error: "Conversation not found" });
     return;
