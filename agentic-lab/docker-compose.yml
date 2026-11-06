@@ -1,0 +1,23 @@
+services:
+  ollama:
+    image: ollama/ollama
+    ports: ["11434:11434"]
+    volumes: [ollama:/root/.ollama]
+    dns: [1.1.1.1, 8.8.8.8]   # bypass flaky Docker embedded DNS when pulling models
+    environment:
+      OLLAMA_KEEP_ALIVE: 30m   # keep models in GPU memory 30 min after last use (-1 = forever)
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+  db:
+    image: pgvector/pgvector:pg16
+    environment: { POSTGRES_PASSWORD: dev }
+    ports: ["5432:5432"]
+  qdrant:
+    image: qdrant/qdrant
+    ports: ["6333:6333"]
+volumes: { ollama: {} }
